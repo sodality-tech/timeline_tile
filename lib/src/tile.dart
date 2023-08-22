@@ -589,12 +589,12 @@ class _TimelinePainter extends CustomPainter {
               endBottomLine.dx,
               beginBottomLine.dy +
                   ((endBottomLine.dy - beginBottomLine.dy) *
-                      (beforeLineStyle.gradientFraction ?? 0)),
+                      (afterLineStyle.gradientFraction ?? 0)),
             )
           : Offset(
               beginBottomLine.dx +
                   ((endBottomLine.dx - beginBottomLine.dx) *
-                      (beforeLineStyle.gradientFraction ?? 0)),
+                      (afterLineStyle.gradientFraction ?? 0)),
               endBottomLine.dy,
             );
 
