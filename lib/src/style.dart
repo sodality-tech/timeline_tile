@@ -12,10 +12,8 @@ class IndicatorStyle {
     this.iconStyle,
     this.indicatorXY = 0.5,
     this.drawGap = false,
-  })  : assert(width >= 0,
-            'The width must be provided and bigger than 0.0'),
-        assert(height >= 0,
-            'The height must be provided and bigger than 0.0');
+  })  : assert(width >= 0, 'The width must be provided and bigger than 0.0'),
+        assert(height >= 0, 'The height must be provided and bigger than 0.0');
 
   /// The width from the indicator.
   /// It defaults to 20.
@@ -85,6 +83,8 @@ class LineStyle {
   const LineStyle({
     this.color = Colors.grey,
     this.thickness = 4,
+    this.gradient,
+    this.gradientFraction,
   });
 
   /// The color used to paint the line. It defaults to ([Colors.grey]).
@@ -93,4 +93,10 @@ class LineStyle {
   /// The thickness from the line. It can't be bigger than ([IndicatorStyle.width])
   /// and defaults to 4.
   final double thickness;
+
+  // This gradient will be drawn on the line
+  final Gradient? gradient;
+
+  // This is the fraction of the line that will have the gradient
+  final double? gradientFraction;
 }

@@ -363,9 +363,9 @@ class _TimelinePainter extends CustomPainter {
     this.isFirst = false,
     this.isLast = false,
     required IndicatorStyle indicatorStyle,
-    required LineStyle beforeLineStyle,
-    required LineStyle afterLineStyle,
-  })   : beforeLinePaint = Paint()
+    required this.beforeLineStyle,
+    required this.afterLineStyle,
+  })  : beforeLinePaint = Paint()
           ..color = beforeLineStyle.color
           ..strokeWidth = beforeLineStyle.thickness,
         afterLinePaint = Paint()
@@ -424,6 +424,9 @@ class _TimelinePainter extends CustomPainter {
   /// diameter of the circumference.
   final double indicatorSize;
 
+  final LineStyle beforeLineStyle;
+  final LineStyle afterLineStyle;
+
   /// Used to paint the top line
   final Paint beforeLinePaint;
 
@@ -472,13 +475,13 @@ class _TimelinePainter extends CustomPainter {
     );
 
     if (!hasGap) {
-      _drawSingleLine(canvas, centerAxis, position);
+      _drawSingleLine(canvas, centerAxis, position, size);
     } else {
       if (!isFirst) {
-        _drawBeforeLine(canvas, centerAxis, position);
+        _drawBeforeLine(canvas, centerAxis, position, size);
       }
       if (!isLast) {
-        _drawAfterLine(canvas, centerAxis, position);
+        _drawAfterLine(canvas, centerAxis, position, size);
       }
     }
 
@@ -523,7 +526,19 @@ class _TimelinePainter extends CustomPainter {
   }
 
   void _drawSingleLine(
-      Canvas canvas, double centerAxis, AxisPosition position) {
+      Canvas canvas, double centerAxis, AxisPosition position, Size size) {
+    final beforeRect =
+        Rect.fromLTWH(-size.width / 2, 0, size.width, size.height);
+    final afterRect = Rect.fromLTWH(size.width / 2, 0, size.width, size.height);
+
+    final beforeGradientPaint = Paint()
+      ..shader = beforeLineStyle.gradient?.createShader(beforeRect)
+      ..strokeWidth = beforeLineStyle.thickness;
+
+    final afterGradientPaint = Paint()
+      ..shader = afterLineStyle.gradient?.createShader(afterRect)
+      ..strokeWidth = afterLineStyle.thickness;
+
     if (!isFirst) {
       final beginTopLine = axis == TimelineAxis.vertical
           ? Offset(centerAxis, 0)
@@ -533,15 +548,22 @@ class _TimelinePainter extends CustomPainter {
               centerAxis,
               paintIndicator || !drawGap
                   ? position.objectSpace.center
-                  : position.firstSpace.end,
-            )
+                  : position.firstSpace.end)
           : Offset(
               paintIndicator || !drawGap
                   ? position.objectSpace.center
                   : position.firstSpace.end,
               centerAxis,
             );
+
+      final endTopLineGradient = axis == TimelineAxis.vertical
+          ? Offset(endTopLine.dx,
+              endTopLine.dy * (beforeLineStyle.gradientFraction ?? 0))
+          : Offset(endTopLine.dx * (beforeLineStyle.gradientFraction ?? 0),
+              endTopLine.dy);
+
       canvas.drawLine(beginTopLine, endTopLine, beforeLinePaint);
+      canvas.drawLine(beginTopLine, endTopLineGradient, beforeGradientPaint);
     }
 
     if (!isLast) {
@@ -561,12 +583,29 @@ class _TimelinePainter extends CustomPainter {
       final endBottomLine = axis == TimelineAxis.vertical
           ? Offset(centerAxis, position.secondSpace.end)
           : Offset(position.secondSpace.end, centerAxis);
+
+      final endBottomLineGradient = axis == TimelineAxis.vertical
+          ? Offset(
+              endBottomLine.dx,
+              beginBottomLine.dy +
+                  ((endBottomLine.dy - beginBottomLine.dy) *
+                      (beforeLineStyle.gradientFraction ?? 0)),
+            )
+          : Offset(
+              beginBottomLine.dx +
+                  ((endBottomLine.dx - beginBottomLine.dx) *
+                      (beforeLineStyle.gradientFraction ?? 0)),
+              endBottomLine.dy,
+            );
+
       canvas.drawLine(beginBottomLine, endBottomLine, afterLinePaint);
+      canvas.drawLine(
+          beginBottomLine, endBottomLineGradient, afterGradientPaint);
     }
   }
 
   void _drawBeforeLine(
-      Canvas canvas, double centerAxis, AxisPosition position) {
+      Canvas canvas, double centerAxis, AxisPosition position, Size size) {
     final beginTopLine = axis == TimelineAxis.vertical
         ? Offset(centerAxis, 0)
         : Offset(0, centerAxis);
@@ -582,7 +621,8 @@ class _TimelinePainter extends CustomPainter {
     }
   }
 
-  void _drawAfterLine(Canvas canvas, double centerAxis, AxisPosition position) {
+  void _drawAfterLine(
+      Canvas canvas, double centerAxis, AxisPosition position, Size size) {
     final beginBottomLine = axis == TimelineAxis.vertical
         ? Offset(centerAxis, position.secondSpace.start)
         : Offset(position.secondSpace.start, centerAxis);
